@@ -13,6 +13,7 @@ def search_box():
 
         hits = res['hits']['hits']
         aggs = res['aggregations']
+        print(aggs)
         num_results = len(hits)
         
         return render_template('index.html',query=query,hits=hits,num_results=num_results,aggs=aggs)

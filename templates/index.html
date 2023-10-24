@@ -9,38 +9,6 @@
 <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
 <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
 
-<!------ Include the above in your HEAD tag ---------->
-<script>
-	function MyFunction(aggregate){
-		console.log("hiiiiii");
-		keyword = aggregate.name;
-		console.log("keyword: "+keyword);
-		songs_array = document.getElementsByClassName('search-result row');
-		songs_array = Array.from(songs_array);
-		matching_songs = songs_array.filter(keyword_filter,keyword);
-		len_matching = matching_songs.length;
-		len_original = songs_array.length;
-		section = document.getElementById('song_section');
-		section.innerHTML = matching_songs.map(e => e.outerHTML).join()
-		console.log(section);
-		header = document.getElementById('results');
-		header.innerHTML = `<h2 class="lead" id="results"><strong class="text-danger">${len_matching}</strong> results out of ${len_original} matches the criteria</h2>`;
-
-		var tags_ul = document.getElementById("tags");
-		var tags_li = document.createElement("li");
-		tags_li.setAttribute("style","display:inline-block; padding:5px; margin:10px; border: 1px solid black; border-radius: 5px;");
-		tags_li.appendChild(document.createTextNode(keyword));
-		tags_ul.appendChild(tags_li);
-	}
-
-	function keyword_filter(element){
-		keyword = this;
-		content = element.innerText;
-		return content.includes(keyword)
-	}
-
-</script>
-
 <div class="container">
 	{% if hits %}
 		<div class="d-flex align-items-center w-100 justify-content-center pt-4">
@@ -77,12 +45,15 @@
 							<div class="col-md-6">
 								<ul class="meta-search">
 									<li> <span class="h5"> Metaphor Count: {{ hit._source.count }} </span></li>
+									<li> <span class="h5"> Metaphor Present: {{ hit._source.metaphor_present }} </span></li>
 
 								</ul>
 								<ul class="meta-search">
 									<li> <span class="h5"> Poem Line : {{ hit._source.line }} </span></li>
-									<li> <span class="h5"> Metaphor: {{ hit._source.metaphorical_terms }}</span></li>
-									<li> <span class="h5"> Meaning: {{ hit._source.meaning }}</span></li>
+									{% if hit._source.count != "0" %}
+										<li> <span class="h5"> Metaphor: {{ hit._source.metaphorical_terms }}</span></li>
+										<li> <span class="h5"> Meaning: {{ hit._source.meaning }}</span></li>
+									{% endif %}
 								</ul>
 							</div>							
 						</div>
@@ -143,3 +114,57 @@
 	{% endif %}
 
 </div>
+<script>
+	var songs_array = document.getElementsByClassName('search-result row');
+	songs_array = Array.from(songs_array);
+	function MyFunction(aggregate) {
+		console.log("hiiiiii");
+		keyword = aggregate.name;
+		console.log("keyword: " + keyword);
+
+		matching_songs = songs_array.filter(keyword_filter, keyword);
+		len_matching = matching_songs.length;
+		len_original = songs_array.length;
+		section = document.getElementById('song_section');
+		section.innerHTML = matching_songs.map(e => e.outerHTML).join()
+		console.log(section);
+		header = document.getElementById('results');
+		header.innerHTML = `<h2 class="lead" id="results"><strong class="text-danger">${len_matching}</strong> results out of ${len_original} matches the criteria</h2>`;
+
+		removeListItemByKeyword("1");
+		removeListItemByKeyword("0");
+		removeListItemByKeyword("\u0d94\u0dc0\u0dca");  // present
+		removeListItemByKeyword("\u0db1\u0dd0\u0dad"); //not present
+
+		var tags_ul = document.getElementById("tags");
+		var tags_li = document.createElement("li");
+		tags_li.setAttribute("style", "display:inline-block; padding:5px; margin:10px; border: 1px solid black; border-radius: 5px;");
+		tags_li.appendChild(document.createTextNode(keyword));
+		tags_ul.appendChild(tags_li);
+	}
+	
+	function removeListItemByKeyword(keywordToRemove) {
+		var tags_ul = document.getElementById("tags");
+		var listItems = tags_ul.getElementsByTagName("li");
+		for (var i = 0; i < listItems.length; i++) {
+			var listItem = listItems[i];
+			if (listItem.textContent === keywordToRemove) {
+				tags_ul.removeChild(listItem);
+			}
+		}
+	}
+
+	function keyword_filter(element) {
+		keyword = this;
+		content = element.innerText;
+		var regex = /Metaphor Present: (.+)/
+		var match = content.match(regex)
+		if (match) {
+			var metaphorPresent = match[1]; // The captured value is in the second group
+		}
+		if(keyword =="ඔව්" || keyword == "නැත")
+			return content.includes(keyword) && metaphorPresent.includes(keyword);
+		return content.includes(keyword) 
+	}	
+
+</script>
